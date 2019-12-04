@@ -9,7 +9,7 @@ def main():
         lb, ub = f.read().split('-')
 
     problem = Problem()
-    for i in range(6):
+    for i in range(len(lb)):
         if i > 0:
             domain = range(min(domain), 10)
             problem.addVariable(i, domain)

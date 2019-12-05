@@ -1,40 +1,66 @@
 #/usr/bin/python3
 
 import itertools
+import operator
+
 
 class Scanner():
     def __init__(self, inp):
         self.inp = inp
         self.address_to_store = -1
 
-    def scan(self, noun, verb):
+    def scan(self, instruction_input):
         tape = list(self.inp)
-        if noun:
-            tape[1] = noun
-        if verb:
-            tape[2] = verb
         head = 0
         while tape[head] != 99:
             op = tape[head]
-            if op<10:
-                self.handle_ops(tape,op,head)
+            digits = [int(x) for x in str(op).zfill(5)]
+            param_op = digits[-1]
+
+            if param_op not in [3, 4]:
+                params = zip(tape[head + 1:head + 3], digits[1:3][::-1])
+                values = self.get_values(tape, params)
+
+            if param_op == 1:
+                tape[tape[head + 3]] = operator.add(*values)
+                head += 4
+            elif param_op == 2:
+                tape[tape[head + 3]] = operator.mul(*values)
+                head += 4
+            elif param_op == 4:
+                params = [(tape[head + 1], digits[2])]
+                print("{}".format(*self.get_values(tape, params)))
+                head += 2
+            elif param_op == 3:
+                tape[tape[head + 1]] = instruction_input
+                head += 2
+            elif param_op == 5:
+                if values[0] != 0:
+                    head = values[1]
+                else:
+                    head += 3
+            elif param_op == 6:
+                if values[0] == 0:
+                    head = values[1]
+                else:
+                    head += 3
+            elif param_op == 7:
+                tape[tape[head + 3]] = int(values[0] < values[1])
+                head += 4
+            elif param_op == 8:
+                tape[tape[head + 3]] = int(values[0] == values[1])
+                head += 4
             else:
-                print(op)
-                digits = [int(x) for x in str(op)]
-                op = digits[-1:]
-                self.handle_ops(tape,op,head)
+                raise RuntimeError("Invalid Opcode {},{}!".format(param_op, op))
 
-            head += 2 if op == 2 or op == 4 else 4
-
-    def handle_ops(self,tape,op,head):
-        if op == 1:
-            tape[tape[head + 3]] = tape[tape[head + 1]] + tape[tape[head + 2]]
-        elif op == 2:
-            tape[tape[head + 3]] = tape[tape[head + 1]] * tape[tape[head + 2]]
-        elif op == 3:
-            self.address_to_store = tape[head + 1]
-        elif op == 4:
-            out_value = tape[tape[head + 1]]
+    def get_values(self, tape, params):
+        values = []
+        for param in params:
+            if param[1]:
+                values.append(param[0])
+            else:
+                values.append(tape[param[0]])
+        return values
 
 
 def main():
@@ -42,7 +68,8 @@ def main():
         inp = [int(x) for x in f.read().split(',')]
 
     scanner = Scanner(inp)
-    print("Part I: {}".format(scanner.scan(12,2)))
+    scanner.scan(5)
+
 
 if __name__ == '__main__':
     main()

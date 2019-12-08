@@ -11,6 +11,7 @@ class Scanner():
         self.head = 0
         self.tape = None
         self.last_out = 0
+        self.done = False
 
     def scan(self, instruction_input, persistent=False):
         tape = self.tape if self.tape else list(self.inp)
@@ -63,7 +64,7 @@ class Scanner():
             else:
                 raise RuntimeError("Invalid Opcode {},{}!".format(
                     param_op, op))
-        return "DONE"
+        self.done = True
 
     def get_values(self, tape, params):
         values = []
@@ -94,13 +95,13 @@ def main():
         t_in = 0
         scanners = [Scanner(inp) for x in c]
         loop_counter = 0
-        while t_in != "DONE":
+        while not scanners[0].done:
             for i, phase in enumerate(c):
                 if loop_counter == 0:
                     t_in = scanners[i].scan([phase, t_in], True)
                 else:
                     t_in = scanners[i].scan([t_in], True)
-                if t_in == "DONE":
+                if scanners[i].done:
                     break
             loop_counter += 1
         t_values[scanners[-1].last_out] = c
